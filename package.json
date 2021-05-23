@@ -1,0 +1,22 @@
+{
+  "name": "intelligent_embedded_systems_egw",
+  "version": "1.0.0",
+  "description": "",
+  "main": "main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/KolmaginDanil/Intelligent_embedded_systems_EGW.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/KolmaginDanil/Intelligent_embedded_systems_EGW/issues"
+  },
+  "homepage": "https://github.com/KolmaginDanil/Intelligent_embedded_systems_EGW#readme",
+  "dependencies": {
+    "prettier": "^2.3.0"
+  }
+}
