@@ -103,6 +103,7 @@ class SchedulingAlgorithm {
     check(distribute());
     isLogging && console.log(this.queue.map((task) => task.toString()));
     this.workTime++;
+    return this;
   };
 
   toString = () => {
@@ -148,6 +149,24 @@ class SchedulingAlgorithm {
       result +
       '"<" - added task to queue; "-" - used resource; ">" - completed task; "*" - missed deadline.'
     );
+  };
+
+  addTask = (taskIndex, work) => {
+    const { workTime, tasksArr } = this;
+    if (taskIndex < 0 || taskIndex > tasksArr.length - 1) return this;
+    const newTask = tasksArr[taskIndex];
+    newTask.wasStart = workTime;
+    newTask.rest = tasksArr[taskIndex].tCalc;
+    newTask.counter = this.counter;
+    this.history.push({
+      when: workTime,
+      task: newTask,
+      flag: 'added',
+    });
+    this.counter++;
+    this.queue.push(newTask);
+    work();
+    return this;
   };
 }
 
