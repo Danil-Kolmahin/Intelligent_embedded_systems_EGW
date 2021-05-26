@@ -20,26 +20,40 @@ const erlang = (x, a = 0.1, b = 1) =>
 const tasks = [
   [null, m1, m1 * k],
   [null, m2, m2 * k],
+  [null, m2, m2 * k],
 ];
+// const tasks = [
+//   [7, 4, 7],
+//   [5, 2, 5],
+// ];
 
 const myFIFO = new FIFO(transformMatrixToTasks(tasks));
 const myRM = new RM(transformMatrixToTasks(tasks));
 const myEDF = new EDF(transformMatrixToTasks(tasks));
 
-const erlArr = tasks.map(() => erlang(0));
+let que = [];
 for (let i = 0; i < 100; i++) {
-  const ifArr = erlArr.map((erl, j) => {
-    if (erl < i) {
-      erlArr[j] = erlang(i);
-      return j;
-    }
-    return null;
-  });
-  const index = ifArr.findIndex((val) => val !== null);
-  myFIFO.iterate().addTask(index !== -1 ? index : Infinity, works[index]);
-  myRM.iterate().addTask(index !== -1 ? index : Infinity, works[index]);
-  myEDF.iterate().addTask(index !== -1 ? index : Infinity, works[index]);
+  myFIFO.iterate().addTask(i % 3, works[i % 3]);
+  myRM.iterate().addTask(i % 3, works[i % 3]);
+  myEDF.iterate().addTask(i % 3, works[i % 3]);
+  que.push(myEDF.queue.length);
 }
+
+const arrAvg = (arr) => arr.reduce((a, b) => a + b, 0) / arr.length;
+console.log('The average size of the incoming queue: ' + arrAvg(que)); // 2.62
+console.log(
+  'The average waiting time in the queue: ' +
+    arrAvg(
+      myEDF.getSomeArr().map((arr) => (!isNaN(arrAvg(arr)) ? arrAvg(arr) : 0))
+    )
+);
+console.log(
+  'The number of overdue applications and its restoration to the total ' +
+    'number of applications: ' +
+    (myEDF.counter1 - myEDF.counter2) +
+    ' / ' +
+    myEDF.counter1
+);
 
 console.log('FIFO:');
 console.log(myFIFO.toString());

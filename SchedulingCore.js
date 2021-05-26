@@ -32,9 +32,20 @@ const colorize = (colorId) => (str) =>
   `\x1b[${100 + (colorId % 7)}m\x1b[97m${str}\x1b[0m`;
 
 class Task {
-  constructor(tStart, tCalc, tDeadline) {
-    Object.assign(this, { tStart, tCalc, tDeadline });
+  constructor(tStart, tCalc, tDeadline, that = null) {
+    Object.assign(this, { tStart, tCalc, tDeadline, that });
   }
+
+  getInstance = (index, wasStart) => {
+    const { tStart, tCalc, tDeadline } = this;
+    const newTask = new Task(tStart, tCalc, tDeadline, this);
+    newTask.counter = index;
+    newTask.rest = tCalc;
+    newTask.wasStart = wasStart;
+    return newTask;
+  };
+
+  getProto = () => this.that;
 
   toString = () => JSON.stringify(this);
 }
@@ -46,6 +57,12 @@ class SchedulingAlgorithm {
   counter = 0;
   isLogging = false;
 
+  someArr = new Array(1000).fill(null).map(() => []); //
+  counter1 = 0; //
+  counter2 = 0; //
+
+  getSomeArr = () => this.someArr; //
+
   constructor(tasksArr) {
     this.tasksArr = tasksArr;
   }
@@ -56,13 +73,19 @@ class SchedulingAlgorithm {
       this.queue[changedIndex].rest--;
       this.history.push({
         when: workTime,
-        task: this.queue[changedIndex],
+        task: this.queue[changedIndex].getProto(),
         flag: 'changed',
       });
     }
     this.queue = this.queue.filter((task) => {
       if (task.rest < 1) {
-        this.history.push({ when: workTime, task: task, flag: 'completed' });
+        this.someArr[workTime].push(workTime - task.wasStart); //
+        this.counter2++; //
+        this.history.push({
+          when: workTime,
+          task: task.getProto(),
+          flag: 'completed',
+        });
         isLogging &&
           console.log(
             `\x1b[34m WorkTime: ${workTime}. Task ${task.toString()} completed.\x1b[0m`
@@ -70,7 +93,11 @@ class SchedulingAlgorithm {
         return false;
       }
       if (workTime + task.rest > task.wasStart + task.tDeadline) {
-        this.history.push({ when: workTime, task: task, flag: 'overdue' });
+        this.history.push({
+          when: workTime,
+          task: task.getProto(),
+          flag: 'overdue',
+        });
         isLogging &&
           console.log(
             `\x1b[31m WorkTime: ${workTime}. Task ${task.toString()} deadline was overdue.\x1b[0m`
@@ -79,15 +106,12 @@ class SchedulingAlgorithm {
       }
       return true;
     });
-    tasksArr.forEach((task) => {
+    tasksArr.forEach((task, i, arr) => {
       if (workTime % task.tStart === 0) {
-        const newTask = task;
-        newTask.wasStart = workTime;
-        newTask.rest = task.tCalc;
-        newTask.counter = this.counter;
+        const newTask = task.getInstance(this.counter, workTime);
         this.history.push({
           when: workTime,
-          task: newTask,
+          task: arr[i],
           flag: 'added',
         });
         this.counter++;
@@ -152,20 +176,14 @@ class SchedulingAlgorithm {
   };
 
   addTask = (taskIndex, work) => {
-    const { workTime, tasksArr } = this;
+    const { iterate, tasksArr } = this;
     if (taskIndex < 0 || taskIndex > tasksArr.length - 1) return this;
-    const newTask = tasksArr[taskIndex];
-    newTask.wasStart = workTime;
-    newTask.rest = tasksArr[taskIndex].tCalc;
-    newTask.counter = this.counter;
-    this.history.push({
-      when: workTime,
-      task: newTask,
-      flag: 'added',
-    });
-    this.counter++;
-    this.queue.push(newTask);
+    const ts = this.tasksArr[taskIndex].tStart;
+    this.tasksArr[taskIndex].tStart = 1;
+    iterate();
+    this.tasksArr[taskIndex].tStart = ts;
     work();
+    this.counter1++; //
     return this;
   };
 }
